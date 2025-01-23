@@ -1,0 +1,63 @@
+---
+# tasks file for breakfix1
+- name: Set initial facts
+  ansible.builtin.set_fact:
+    satellite_hostname: "{{ ansible_fqdn }}"
+
+- name: Read credentials
+  slurp:
+      path: /root/.hammer/cli.modules.d/foreman.yml
+  register: slurp
+
+- name: Set credentials
+  set_fact:
+        password: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':password'] }}"
+        username: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':username'] }}"
+
+
+- name: Ensure satellite is running.
+  theforeman.foreman.status_info:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+  register: status_info
+
+- name: Clearing content of /etc/hosts
+  shell: "> /etc/hosts"
+
+- name: "Create broken entry of /etc/hosts"
+  blockinfile:
+           path: /etc/hosts
+           block: |
+             127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+             ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+             192.168.0.158 {{ ansible_facts['fqdn'] }}
+
+- name: Breaking the hostname
+  shell: "hostnamectl set-hostname $(hostname -s)"
+       
+- name: Creating a dummy .repo file
+  shell: "touch /etc/yum.repos.d/rh-cloud.repo"
+
+- name: Populating content in rh-cloud.repo
+  blockinfile:
+           path: /etc/yum.repos.d/rh-cloud.repo
+           block: |
+             [rhel-8-for-x86_64-baseos-rpms]
+             name = Red Hat Enterprise Linux 8 for x86_64 - BaseOS (RPMs)
+             baseurl = http://content.example.com/content/rhel-8-for-x86_64-baseos-rpms/
+             gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+             gpgcheck = 1
+             enabled = 1
+
+             [rhel-8-for-x86_64-appstream-rpms]
+             name = Red Hat Enterprise Linux 8 for x86_64 - AppStream (RPMs)
+             baseurl = http://content.example.com/content/rhel-8-for-x86_64-appstream-rpms/
+             gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+             gpgcheck = 1
+             enabled = 1
+
+- name: Breaking Tuning profile
+  shell: "sed -i 's/default/large/' /etc/foreman-installer/scenarios.d/satellite.yaml"
+

@@ -1,0 +1,46 @@
+---
+- name: Grading playbook for SCENARIO_PERFORMANCE
+  hosts: satellite
+  gather_facts: yes
+  tasks:
+       - name: Reading answers file using slurp
+         slurp:
+           path: /etc/foreman-installer/scenarios.d/satellite-answers.yaml
+         register: answers_file
+
+       - name: Extracting puma_thread_max_min puma_worker db_pool pulp_worker
+         set_fact:
+                puma_thread_max: "{{ (answers_file.content | b64decode | from_yaml)['foreman']['foreman_service_puma_threads_max'] }}"
+                puma_thread_min: "{{ (answers_file.content | b64decode | from_yaml)['foreman']['foreman_service_puma_threads_min'] }}"
+                puma_worker: "{{ (answers_file.content | b64decode | from_yaml)['foreman']['foreman_service_puma_workers'] }}"
+                db_pool: "{{ (answers_file.content | b64decode | from_yaml)['foreman']['db_pool'] }}"
+                pulp_worker: "{{ (answers_file.content | b64decode | from_yaml)['foreman_proxy_content']['pulpcore_worker_count'] }}"
+         
+       - name: Reading last_scenario
+         slurp:
+           path: /etc/foreman-installer/scenarios.d/last_scenario.yaml
+         register: last_scenario
+
+       - name: Extracting tuning_profile
+         set_fact:
+           tuning_profile: "{{ (last_scenario.content | b64decode | from_yaml)[':facts']['tuning'] }}"
+
+       - name: Displaying what is being captured
+         debug:
+           msg: puma_thread_max is "{{ puma_thread_max }}"  | puma_thread_min is "{{ puma_thread_min }}" | puma_worker is "{{  puma_worker }}" | db_pool is "{{ db_pool }}" | pulp_worker is "{{ pulp_worker }}" | tuning_profile is "{{ tuning_profile }}"
+
+       - name: Checking result
+         ansible.builtin.debug:
+              msg: Success. your alphanumeric code for completion is PERFORMANCE
+         when: 
+           - puma_thread_max == "16"
+           - puma_thread_min == "16"
+           - ( puma_worker | float >= 8 and puma_worker | float <= 12 )
+           - db_pool == "16"
+           - pulp_worker == "8"
+           - tuning_profile == "medium"
+
+       - name: In case of failure
+         ansible.builtin.debug:
+           msg: "The satellite is not tuned correctly, please try again."
+         when: db_pool != "16" or tuning_profile != "medium" or puma_thread_max != "16" or puma_thread_min != "16" or pulp_worker != "8" or ( puma_worker | float != 12 and puma_worker | float != 11 and puma_worker | float != 10 and puma_worker | float != 9 and puma_worker | float != 8 )
