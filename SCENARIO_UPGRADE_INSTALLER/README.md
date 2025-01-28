@@ -1,23 +1,15 @@
-breakfix1
+breakfix1/SCENARIO_UPGRADE
 =========
 
-This role targets to break a satellite and capsule server in a way that, neither hosts will be able to download patches from them nor any repos can be successully resynced on the satellite. 
-
-Example Error:
-
-Status code: 500  when trying to install\update packages on the RHEL systems connected with the satellite server through a capsule server.
-
-~~~
-[MIRROR] katello-host-tools-4.2.3-5.el8sat.noarch.rpm: Status code: 500 for https://capsule.example.com/pulp/content/RedHat/Library/content/dist/layered/rhel8/x86_64/sat-client/6/os/Packages/k/katello-host-tools-4.2.3-5.el8sat.noarch.rpm (IP: XX.XX.XXX.XXX)
-~~~
+This role simulates some problems while doing a satellite upgrade.
 
 What we essentially do by this ansible role is:
 
 * Confirm that the satellite is running
-* Create an activation key
-* Generate a registration command [ via Global registration method ] to register a host through the external capsule server
-* Execute the command on the client and register it
-* Update database records of satellite and capsule to break them.
+* Change the IP in /etc/hosts
+* Replace hostname -f with shortname
+* Set incorrect tuning param in /etc/foreman-installer/scenarios.d/satellite.yaml
+* Create a repo file in /etc/yum.repos.d/ as the rh-cloud.repo.
 
 
 Requirements
@@ -58,4 +50,4 @@ It is free software licensed under the terms of the GNU General Public License G
 Author Information
 ------------------
 
-This role is developed by Sayan Das <saydas@redhat.com>, <connectwithsayan03@gmail.com>. 
+This role is developed by Soham Majumdar <smajumda@redhat.com>, <csedeepm@gmail.com>. 
