@@ -1,0 +1,37 @@
+---
+- name: Grading playbook for SCENARIO_UPGRADE_INSTALLER
+  hosts: satellite
+  gather_facts: no
+  tasks:
+       - name: Extracting satellite_version
+         shell: "rpm -qa | grep satellite-6 | cut -c13-16"
+         register: satellite_version
+
+       - name: Extracting exit_code
+         shell: "tail -5 /var/log/foreman-installer/satellite.log | head -1 | cut -c63-74"
+         register: exit_code
+
+       - name: see what is captured
+         debug:
+           msg: satellite_version is "{{ satellite_version.stdout }}" and exit_code is  "{{ exit_code.stdout }}"
+
+       - name: Checking result
+         ansible.builtin.debug:
+              msg: Success. your alphanumeric code for completion is UPGRADE615
+         when:
+           - satellite_version.stdout == "15.5"
+           - exit_code.stdout == "signal was 2"
+
+       - name: Marking the lab valid even when 6.16.6 will be released
+         ansible.builtin.debug:
+           msg: Success. your alphanumeric code for completion is UPGRADE615
+         when:
+           - satellite_version.stdout == "15.6"
+           - exit_code.stdout == "signal was 2"
+
+       - name: In case of failure
+         ansible.builtin.debug:
+           msg: "The satellite is not upgraded successfully yet, please try again."
+         when:
+           - satellite_version.stdout == "15.4" or  exit_code.stdout != "signal was 2"
+

@@ -1,0 +1,34 @@
+---
+# tasks file for breakfix3
+- name: Set initial facts
+  ansible.builtin.set_fact:
+    satellite_hostname: "{{ ansible_fqdn }}"
+
+- name: Read credentials
+  slurp:
+      path: /root/.hammer/cli.modules.d/foreman.yml
+  register: slurp
+
+- name: Set credentials
+  set_fact:
+        password: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':password'] }}"
+        username: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':username'] }}"
+
+
+- name: Ensure satellite is running.
+  theforeman.foreman.status_info:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+  register: status_info
+
+- name: Enabling TFTP
+  shell: "satellite-installer --foreman-proxy-tftp true --foreman-proxy-tftp-managed true --foreman-proxy-tftp-servername $(hostname -f)"
+
+- name: Breaking answers file
+  shell: sed -i '240i \ \ - "/var/lib/tftpboot/pxelinux.cfg,/var/lib/tftpboot/grub,/var/lib/tftpboot/grub2,/var/lib/tftpboot/boot,/var/lib/tftpboot/ztp.cfg,/var/lib/tftpboot/poap.cfg"' /etc/foreman-installer/scenarios.d/satellite-answers.yaml
+
+- name: Breaking satellite and this task will end in error.
+  shell: "satellite-installer"
+  ignore_errors: yes

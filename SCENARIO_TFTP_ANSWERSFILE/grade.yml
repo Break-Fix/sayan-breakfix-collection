@@ -1,0 +1,28 @@
+---
+- name: Grading playbook for SCENARIO_TFTP_ANSWERSFILE
+  hosts: satellite
+  gather_facts: yes
+  tasks:
+       - name: Reading answers file using slurp
+         slurp:
+           path: /etc/foreman-installer/scenarios.d/satellite-answers.yaml
+         register: answers_file
+
+       - name: Extracting tftp_directories
+         set_fact:
+           tftp_directories: "{{ (answers_file.content | b64decode | from_yaml)['foreman_proxy']['tftp_dirs'] }}"
+
+       - name: Displaying what is being captured
+         debug:
+           msg: tftp_directories is "{{ tftp_directories }}"
+
+       - name: Checking result
+         ansible.builtin.debug:
+              msg: Success. your alphanumeric code for completion is TFTP615
+         when:
+           - tftp_directories == ['/var/lib/tftpboot/pxelinux.cfg','/var/lib/tftpboot/grub','/var/lib/tftpboot/grub2','/var/lib/tftpboot/boot','/var/lib/tftpboot/ztp.cfg','/var/lib/tftpboot/poap.cfg']
+       - name: In case of failure
+         ansible.builtin.debug:
+           msg: TFTP dirs are not configured correctly, please try again.
+         when:
+           - tftp_directories != ['/var/lib/tftpboot/pxelinux.cfg','/var/lib/tftpboot/grub','/var/lib/tftpboot/grub2','/var/lib/tftpboot/boot','/var/lib/tftpboot/ztp.cfg','/var/lib/tftpboot/poap.cfg']

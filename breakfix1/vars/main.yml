@@ -1,8 +1,0 @@
----
-# vars file for breakfix1
-satellite_organization: "RedHat"
-satellite_location: "GSS"
-satellite_login:
-  username: "admin"
-  password: "RedHat1!"
-activation_key: "RHEL-AK"

@@ -1,0 +1,5 @@
+---
+# vars file for breakfix1
+satellite_organization: "Default Organization"
+satellite_location: "Default Location"
+activation_key: "RHEL-AK"
