@@ -1,0 +1,76 @@
+---
+- name: Break TFTP directory permissions
+  hosts: satellite
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: If file exists, read its content
+      ansible.builtin.command: bash -c "awk '/:enabled:/{print $NF}' /etc/foreman-proxy/settings.d/tftp.yml"
+      register: tftp_stat
+      changed_when: false
+
+    - name: Run satellite-installer to enable TFTP Feature
+      ansible.builtin.shell: |
+        satellite-installer --foreman-proxy-tftp true \
+        --foreman-proxy-tftp-managed true \
+        --foreman-proxy-tftp-servername $(hostname --fqdn)
+      when: tftp_stat.stdout == 'false'
+
+    - name: Set 0760 + SGID on /var/lib/tftpboot
+      ansible.builtin.file:
+        path: /var/lib/tftpboot
+        state: directory
+        owner: root
+        group: root
+        mode: '2760' # 0760 + 2000 (sgid) = 2760
+
+    - name: Set 0444 on /var/lib/tftpboot/pxelinux.cfg
+      ansible.builtin.file:
+        path: /var/lib/tftpboot/pxelinux.cfg
+        state: directory
+        owner: root
+        group: root
+        mode: '0744'
+
+    - name: Create shell script to mimic this enforcement of permissions
+      ansible.builtin.copy:
+        dest: /usr/local/sbin/fix_tftp_perms.sh
+        owner: root
+        group: root
+        mode: '0755'
+        content: |
+          #!/bin/bash
+          #
+          # This script enforces TFTP directory permissions
+          # Ensure /var/lib/tftpboot parent exists and has correct perms
+          mkdir -p /var/lib/tftpboot
+          chown root:root /var/lib/tftpboot
+          chmod 2760 /var/lib/tftpboot
+          #
+          # Ensure /var/lib/tftpboot/pxelinux.cfg exists and has correct perms
+          mkdir -p /var/lib/tftpboot/pxelinux.cfg
+          chown root:root /var/lib/tftpboot/pxelinux.cfg
+          chmod 0444 /var/lib/tftpboot/pxelinux.cfg
+
+    - name: Setup cron job to run script every 5 seconds (workaround)
+      ansible.builtin.cron:
+        name: "Change TFTP permissions (runs 20x per minute)"
+        user: root
+        minute: "*" # Run every minute
+        job: "for i in {1..12}; do /usr/local/sbin/fix_tftp_perms.sh; sleep 3; done"
+      # EXPLANATION: cron's minimum frequency is 1 minute.
+      # This job runs every minute, then executes a loop 12 times,
+      # sleeping 5 seconds between each run (12 * 5 = 60 seconds).
+      # This effectively runs the script every 5 seconds.
+      # We can redirect output to /dev/null to prevent cron mail spam but
+      # i am leaving it as it is for now
+
+    - name: Run build-pxe-default 
+      ansible.builtin.command: bash -c "hammer template build-pxe-default"
+      register: hammer_out
+      failed_when: false
+    
+    - ansible.builtin.debug:
+        msg: Tftp is broken
+      when: hammer_out.rc != 0
