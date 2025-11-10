@@ -1,0 +1,47 @@
+---
+- name: Configure ec2-user
+  hosts: satellite
+  become: true
+  vars:
+    user_password: 'password@123'
+    admin_group: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+    user_ssh_keys:
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDge6Fngiq8wHJYqy/kHikpIzP4V3UCNluwvzxpv2mfdiocXDtLlIscgK0svlom3tSZU56IYrCLlZkQ/gIqYHQ16HrV1JhVQRlht224D73YK+fGNfwJbI7TuVa3k5Xq3HKTEFAK7HnbSD8z2ldr+jaMbe7EpjD4uJWnwyIQTwLSi9F3M/F29TiS5zXw9TlzoJyP+HY64S2JUcZfvCYK4AqjwHRER55XYb5hz0HkOZ503d8e4ZXdTaDcR78bKIn/d/SubYLJK/IA1lGJZpX5kZrojAAs7w+LNVeG+dccU+fqMzQgFiD6vdteRstL5lnnitpst627a5q8DPn7Y8UkAf2R root@vm251-13.gsslab.pnq2.redhat.com"
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDQHwsFn5p1+C5MR50w6AIEw9W7Dlj6wdGYf6G+Ula+foFVlXqM+dwbNZqA9/CguaUJyVXD19Fz97RPDgthG2DqOaWsZy/ucTnCSceMxTasu2nLsgcmMF7bxMTr+iD390oysBKYCkdq3w1CfZMY31oUCPe+mENuoEwa3TX03OU3BOct+VubEKry9lM2WChgaA76JgjxjIHDztSbE+C4QQOMksaTINwJgr8E4OGbZtdV2ybuBZVO9+W++GNgs1UKcJxchv9JGvXKmp/yeH0yEcUOddGBXsU+LrF/AwhhS9B/D/jr36oyXhzCzAiWhP8CHVrK6FlZLUrccqHpGSlAqQd4r1MUajtrSBdy61PRKxYcTRfe8rT1lLheYElDEbvVNKH91DaTHpWqqt2xoWbtwOgmN3Hdnvjoj3TBtqJ4LbOaXEUZrRF5ySNRrrq1moyiWIcgyIhavD3Z9o88kc16kCPB3nql299iJZJlUjYF70voWb/ppCKcO4EpEQNTp37VL6k= root@vm251-223.gsslab.pnq2.redhat.com"
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCltloU7BvG4UHF3T1Iu9mKBhVqIw4qRS0hUFeRx1S/roZHv4C5U9oCoft+vHggueG7qWPUcZvuBvIU9+Zv5sjDb3d8QsRkB/dKIDnxeDG76rvh3/lO42XvdYfFb5qgkmQqNG8luIMZbaZmW9CyGTDtCRNKrdTlaoh6FKKI8NDrp8sYnhGEQ2zSB0aSBS/kDaqoI1bVBK2WmjgNUZ3bqZ8FVUD6b6LYSL4PKzrYSnRL1A7Yz/y9UEv98Fi7PIkw0Ma0QePGIjEoIPQDHa2o85ddC/b/jtEVxZValUqiuSmfIhk5GjmZDCTAHcw6PcAPO8/0osRLjIPhBtb63PmDadhsZmBoc4eXmgoHxOyrCfgdbBzNtfSsA+s11cO7SvEhSNJfPbQdUWGXm4+KfK+QGlS1k7KiMhnXAaPnu+/9SbKq1wLlY0jAsHxnE1UfwLCIAV5iu5xSQnnXm8h1oykUg93fQPMbXmUvNrmhGfYh/i10YMgqRmGm/saoWr7ZBcCbHY8= saydas@saydas.pnq.csb"
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCi/9MPSqKNTofIuAPO74LFz+kOd0IK+havebz7LjtdhqI1THE8eueRmP8glsA+FVn786dNSoG04iaoF9BiXJFIBlEVvOZXgAYDL/yQqgDLd9Jb39P2TEr7Yro8DMbfkH3oh6Qt4NxvucCxXRsrL1QYICDnUjQ8vDvsNfAtzpH+RXa6vsMHW4vObQuCspl1Y2DLrL2IV8O9T5rQJ6MV3W/xCqKGiRHUWISZnY1HVianCUcz9R2U/vCza/RawjdcomdirQYpycK2tQqzqXLqrmnLmTRDtY+R8lXe79QU4QthnWmjG1aRf+ScfU2fdaAyxCiKKbJdf8EhKg/exyN40ZcmOqu+wJV7v9xNozD2jFTxXnNX5TQB0XazIWw5wGazBahOZ/DZmi4PSKhjYiY6h87S9NVsd4iZ5VhSmnMewG3coLEtoGhemML/HFV+ypUGB0Dal4VMyFtfX2dBQ3bAb/jIti6iyULmT+1kNYSUmJcTPKHs0mL3hAwX27dr0oCY/dM= root@saydas.pnq.csb"
+      - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDbwwvDkBnSLYmmGMo11aqvFKUnY6NIsAj+Vjh4/UpQHmDLxDqc4DPVi/a7wsgdXiqBxV8rkX2AdYEUavf5Vode+p1WtCcGAlD/4evJTbeSI1lreACS/mS5GlVjJmR8p24ytu6+fPPl59jSscAsQFcX+hL1uw19CeGSZKVm8nYzgm7sAbYGxVsAwrlSKwcC9aKYTeOjSznoeUaP1tIh+m6aHa1voJM9QYMLg7ttDcRl2mvNkyx5ONVy7/QnWArdekmU26V/albizCBB3IcDL7/LUwZ4CbUieEHt5sMJMjxgfyEEzixzbgxwOtAayVgbPNe5/ItmYyH+Gi5Rqh6HqYUh6FCy7rUKtIGaXlNJSY3W6R0gdE92VtfjjiqaMHaFRvqR7h9K5CxDn6Ah40hAUYBpja1B+aIdh39Wp5JeiIcgYw8ppWUtOXc6rmYssbLLJtEqCu1ABhrYJ4SbicHRMPz+iD1m0ssim1N+W1KrniphePjmXZzum3RY3r+Y60XhtYNE= saydas@saydas.fedora"
+
+  tasks:
+
+    - name: Create 'ec2-user' and set its password
+      ansible.builtin.user:
+        name: ec2-user
+        state: present
+        shell: /bin/bash
+        password: "{{ user_password | password_hash('sha512') }}"
+
+    - name: Add 'ec2-user' to the admin group ({{ admin_group }})
+      ansible.builtin.user:
+        name: ec2-user
+        groups: "{{ admin_group }}"
+        append: true
+        state: present
+
+    - name: Grant 'ec2-user' passwordless sudo rights
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/ec2-user
+        content: "ec2-user   ALL=(ALL) NOPASSWD: ALL"
+        mode: '0440'
+        owner: root
+        group: root
+        # This checks the syntax before committing the file.
+        validate: /usr/sbin/visudo -csf %s
+
+    - name: Add authorized SSH keys for ec2-user
+      ansible.builtin.authorized_key:
+        user: ec2-user
+        key: "{{ item }}"
+        state: present
+        manage_dir: true
+      loop: "{{ user_ssh_keys }}"
