@@ -1,0 +1,5 @@
+# crontab -r
+# chmod -x /usr/local/sbin/fix_tftp_perms.sh
+# chmod g-s /var/lib/tftpboot
+# chmod 0755 /var/lib/tftpboot /var/lib/tftpboot/pxelinux.cfg
+# chown foreman-proxy /var/lib/tftpboot/pxelinux.cfg
