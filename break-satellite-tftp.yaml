@@ -1,8 +1,13 @@
 ---
-#### issue ####
+# Author: Sayan Das ( saydas@redhat.com )
+# Date : Nov 10 2025
+###############
+#### ISSUE ####
+#
 ## # hammer template build-pxe-default
 ## satellite-fqdn: ERF12-9243 [ProxyAPI::ProxyException]: Unable to create default TFTP boot menu ([RestClient::BadRequest]: 400 Bad Request) for Capsule https://satellite-fqdn:9090/tftp (PXEGrub2)
-####
+#
+###############
 - name: Break TFTP directory permissions
   hosts: satellite
   gather_facts: false
