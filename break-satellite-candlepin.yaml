@@ -1,0 +1,93 @@
+---
+# Author: Sayan Das ( saydas@redhat.com )
+# Date : Nov 11 2025
+########## ISSUE ###########
+#####
+# hammer ping fails with following error:
+##
+#candlepin:        
+#    Status:          FAIL
+#    Server Response: Message: Failed to open TCP connection to localhost:23443 (Connection refused - connect(2) for "localhost" port 23443)
+#candlepin_auth:   
+#    Status:          FAIL
+#    Server Response: Message: A backend service [ Candlepin ] is unreachable
+#candlepin_events: 
+#    Status:          FAIL
+#    message:         Not running
+#    Server Response: Duration: 0ms
+##
+# Tomcat service is also not running 
+# systemctl is-failed tomcat
+# failed
+##
+############################
+- name: Playbook to break tomcat as well as candlepin
+  hosts: satellite
+  become: true
+  gather_facts: false
+
+  tasks:
+
+    - name: Check satellite health via hammer
+      ansible.builtin.command: bash -c "hammer --output=json ping  | jq -r '.[].candlepin.Status'"
+      register: health
+
+    - name: Stop all Satellite services
+      ansible.builtin.command: bash -c "satellite-maintain service stop"
+      changed_when: true
+      when: health.stdout != 'FAIL'
+      register: stop_services
+
+    - debug: var=stop_services
+
+    - name: Set group 'root' on /etc/tomcat
+      ansible.builtin.file:
+        path: /etc/tomcat
+        group: root
+        recurse: true
+        state: directory
+      when: health.stdout != 'FAIL'
+
+    - name: Set group 'root' on candlepin.conf
+      ansible.builtin.file:
+        path: /etc/candlepin/candlepin.conf
+        group: root
+        state: file
+      when: health.stdout != 'FAIL'
+      
+    - name: Set ownership on /var/log/candlepin
+      ansible.builtin.file:
+        path: /var/log/candlepin
+        owner: root
+        group: root
+        recurse: true
+        state: directory
+      when: health.stdout != 'FAIL'
+      
+    - name: Set permissions on /var/log/candlepin
+      ansible.builtin.command: bash -c "chmod 600 -R /var/log/candlepin"
+      changed_when: true
+      when: health.stdout != 'FAIL'
+      
+    - name: Corrupt the ActiveMQ journal files
+      ansible.builtin.command: >
+        find /var/lib/candlepin/activemq-artemis -type f -name "*activemq*" \
+        -exec dd if=/dev/zero of={} count=4096 bs=1MiB \;
+      changed_when: true
+      when: health.stdout != 'FAIL'
+      
+    - name: Start Satellite services
+      ansible.builtin.command: bash -c "satellite-maintain service start"
+      changed_when: true
+      failed_when: false
+      when: health.stdout != 'FAIL'
+      
+    - name: Verify tomcat service is in 'failed' state
+      ansible.builtin.command: bash -c "systemctl is-failed tomcat"
+      register: tomcat_stat
+      changed_when: false
+
+    - name: Tomcat is in 'failed' state as expected
+      ansible.builtin.debug:
+        msg: "Tomcat status: {{ tomcat_stat.stdout }}. It is broken now."
+      when: tomcat_stat.rc == 0
