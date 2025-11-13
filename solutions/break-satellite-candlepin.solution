@@ -1,6 +1,6 @@
 # chgrp -R tomcat /etc/tomcat
+# chgrp tomcat -R /etc/candlepin/
 # chgrp tomcat /etc/candlepin/candlepin.conf
-# chgrp -R tomcat:tomcat /var/log/candlepin
 # chown -R tomcat:tomcat /var/log/candlepin
 # chmod 644 -R /var/log/candlepin
 # chmod 755 /var/log/candlepin
