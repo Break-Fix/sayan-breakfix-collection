@@ -1,0 +1,32 @@
+# for i in `rpm -qa | sort`; do echo -e "\nChecking $i :\n"; rpm -V $i; done &> rpmva.txt
+
+# egrep "Checking|missing" rpmva.txt | grep missing -B1 | grep Checking
+Checking foreman-3.14.0.12-1.el9sat.noarch :
+Checking httpd-2.4.62-7.el9_7.3.x86_64 :
+Checking httpd-core-2.4.62-7.el9_7.3.x86_64 :
+Checking httpd-filesystem-2.4.62-7.el9_7.3.noarch :
+Checking mod_http2-2.0.26-5.el9.x86_64 :
+Checking mod_lua-2.4.62-7.el9_7.3.x86_64 :
+Checking mod_ssl-2.4.62-7.el9_7.3.x86_64 :
+Checking redis-6.2.20-2.el9_7.x86_64 :
+Checking rubygem-foreman_ansible-15.0.7-1.el9sat.noarch :
+Checking rubygem-foreman_azure_rm-3.0.4-0.1.el9sat.noarch :
+Checking rubygem-foreman_bootdisk-22.0.4-1.el9sat.noarch :
+Checking rubygem-foreman_discovery-25.1.1-1.el9sat.noarch :
+Checking rubygem-foreman_google-3.0.5-1.el9sat.noarch :
+Checking rubygem-foreman_leapp-2.0.5-0.1.el9sat.noarch :
+Checking rubygem-foreman_openscap-10.2.1-1.el9sat.noarch :
+Checking rubygem-foreman_remote_execution-15.0.2-1.el9sat.noarch :
+Checking rubygem-foreman_rh_cloud-11.4.4-1.el9sat.noarch :
+Checking rubygem-foreman-tasks-10.0.2-1.el9sat.noarch :
+Checking rubygem-foreman_templates-10.0.7-1.el9sat.noarch :
+Checking rubygem-foreman_theme_satellite-14.3.4-1.el9sat.noarch :
+Checking rubygem-foreman_virt_who_configure-0.5.26-1.el9sat.noarch :
+Checking rubygem-foreman_webhooks-4.0.1-1.el9sat.noarch :
+Checking rubygem-katello-4.16.0.12-1.el9sat.noarch :
+
+
+# dnf reinstall foreman-3.14.0.12-1.el9sat.noarch rubygem-foreman_ansible-15.0.7-1.el9sat.noarch rubygem-foreman_azure_rm-3.0.4-0.1.el9sat.noarch rubygem-foreman_bootdisk-22.0.4-1.el9sat.noarch rubygem-foreman_discovery-25.1.1-1.el9sat.noarch rubygem-foreman_google-3.0.5-1.el9sat.noarch rubygem-foreman_leapp-2.0.5-0.1.el9sat.noarch rubygem-foreman_openscap-10.2.1-1.el9sat.noarch rubygem-foreman_remote_execution-15.0.2-1.el9sat.noarch rubygem-foreman_rh_cloud-11.4.4-1.el9sat.noarch rubygem-foreman-tasks-10.0.2-1.el9sat.noarch rubygem-foreman_theme_satellite-14.3.4-1.el9sat.noarch rubygem-foreman_templates-10.0.7-1.el9sat.noarch rubygem-foreman_virt_who_configure-0.5.26-1.el9sat.noarch rubygem-foreman_webhooks-4.0.1-1.el9sat.noarch rubygem-katello-4.16.0.12-1.el9sat.noarch --disableplugin=foreman-protector
+
+
+# satellite-installer
