@@ -1,7 +1,7 @@
 # To develop breakfix scenarios for a Red Hat Satellite based infrastructure.
 
 ## Author, Copyright and License
-This project is initiated by Sayan Das <saydas@redhat.com>, <connectwithsayan03@gmail.com>. It's further being assisted by personA personB and personC. It is free software licensed under the terms of the GNU General Public License GPL v3 or later. A copy of the license can be obtained here: http://www.gnu.org/licenses/gpl-3.0.html
+This project is initiated by Sayan Das <saydas@redhat.com>, <connectwithsayan03@gmail.com>. It is free software licensed under the terms of the GNU General Public License GPL v3 or later. A copy of the license can be obtained here: http://www.gnu.org/licenses/gpl-3.0.html
 
 ## Motivation!
 
