@@ -1,0 +1,30 @@
+---
+# Author: Sayan Das ( saydas@redhat.com )
+# Date : Jan 27 2026
+###############
+#### ISSUE ####
+#
+## After opening Satellite WebUI, The WebUI shows Foreman and several pages inside the WebUI are broken.
+## 
+#
+###############
+- name: Break Satellite WebUI
+  hosts: satellite
+  gather_facts: false
+  become: true
+  tasks:
+
+    - name: Stop all services
+      ansible.builtin.command: bash -c "satellite-maintain service stop"
+      register: services_stop
+
+    - name: Delete the javascript files
+      ansible.builtin.command: bash -c "{{ item }}"
+      loop:
+        - "rm -rf /usr/share/gems/gems/katello-*/public/assets/katello/*"
+        - "rm -rf /var/lib/foreman/public/assets/*"
+      register: files_deleted
+
+    - name: Start back all services
+      ansible.builtin.command: bash -c "satellite-maintain service start"
+      register: services_start
