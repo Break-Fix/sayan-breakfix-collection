@@ -1,0 +1,13 @@
+---
+- name: Grading playbook for SCENARIO_LEAPP
+  hosts: rhel81 
+  tasks:
+       - name: Detecting result
+         ansible.builtin.debug:
+              msg: "Success. your alphanumeric code for completion is RHEL9"
+         when: ansible_facts['distribution_major_version'] == "9"
+
+       - name: In case of failure
+         ansible.builtin.debug:
+           msg: "The system is not upgraded successfully yet, please try again."
+         when: ansible_facts['distribution_major_version'] != "9"

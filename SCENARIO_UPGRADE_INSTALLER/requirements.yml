@@ -1,0 +1,7 @@
+---
+collections:
+  - name: https://github.com/theforeman/foreman-ansible-modules.git
+    type: git
+    version: develop
+  - name: ansible.posix
+  - name: community.general

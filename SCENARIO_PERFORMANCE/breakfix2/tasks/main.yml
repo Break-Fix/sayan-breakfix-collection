@@ -1,0 +1,45 @@
+---
+# tasks file for breakfix2
+- name: Set initial facts
+  ansible.builtin.set_fact:
+    satellite_hostname: "{{ ansible_fqdn }}"
+
+- name: Read credentials
+  slurp:
+      path: /root/.hammer/cli.modules.d/foreman.yml
+  register: slurp
+
+- name: Set credentials
+  set_fact:
+        password: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':password'] }}"
+        username: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':username'] }}"
+
+
+- name: Ensure satellite is running.
+  theforeman.foreman.status_info:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+  register: status_info
+
+- name: Breaking foreman_service_puma_threads_min
+  shell: "sed -i 's/foreman_service_puma_threads_min:/foreman_service_puma_threads_min: 300/' /etc/foreman-installer/scenarios.d/satellite-answers.yaml"
+- name: Breaking foreman_service_puma_threads_max
+  shell: "sed -i 's/foreman_service_puma_threads_max: 5/foreman_service_puma_threads_max: 300/' /etc/foreman-installer/scenarios.d/satellite-answers.yaml"
+- name: Breaking s/foreman_service_puma_workers
+  shell: "sed -i 's/foreman_service_puma_workers:/foreman_service_puma_workers: 120/' /etc/foreman-installer/scenarios.d/satellite-answers.yaml"
+- name: Breaking db_pool
+  shell: "sed -i 's/db_pool:/db_pool: 300/' /etc/foreman-installer/scenarios.d/satellite-answers.yaml"
+- name: Breaking pulpcore_worker_count
+  shell: "sed -i 's/pulpcore_worker_count: 8/pulpcore_worker_count: 10/' /etc/foreman-installer/scenarios.d/satellite-answers.yaml"
+
+- name: Fair Warning
+  debug:
+    msg: The next task will probably run for 8-10 mins and may end in error. But its expected.
+
+- name: Breaking satellite
+  shell: "satellite-installer"
+  ignore_errors: true
+       
+

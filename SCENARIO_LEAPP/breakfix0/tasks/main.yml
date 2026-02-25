@@ -1,0 +1,105 @@
+---
+# tasks file for breakfix0
+- name: Set initial facts
+  ansible.builtin.set_fact:
+    satellite_hostname: "{{ ansible_fqdn }}"
+
+- name: Read credentials
+  ansible.builtin.slurp:
+      path: /root/.hammer/cli.modules.d/foreman.yml  
+  register: slurp
+
+- name: Set credentials
+  set_fact:
+        password: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':password'] }}"
+        username: "{{ (slurp.content | b64decode | from_yaml)[':foreman'][':username'] }}"
+
+
+- name: Ensure satellite is running.
+  theforeman.foreman.status_info:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+  register: status_info
+
+- name: "Create or update leapp content view"
+  theforeman.foreman.content_view:
+    username: "{{ username }}"
+    password: "{{ password }}"
+    server_url: "https://{{ satellite_hostname }}"
+    name: "leapp_8to9"
+    organization: "{{ satellite_organization }}"
+    repositories:
+      - name: 'Red Hat Enterprise Linux 9 for x86_64 - AppStream RPMs 9'
+        product: 'Red Hat Enterprise Linux for x86_64'
+      - name: 'Red Hat Enterprise Linux 9 for x86_64 - BaseOS RPMs 9'
+        product: 'Red Hat Enterprise Linux for x86_64'
+      - name: 'Red Hat Enterprise Linux 8 for x86_64 - AppStream RPMs 8'
+        product: 'Red Hat Enterprise Linux for x86_64'
+      - name: 'Red Hat Enterprise Linux 8 for x86_64 - BaseOS RPMs 8'
+        product: 'Red Hat Enterprise Linux for x86_64'
+
+- name: "Publish the leapp content view"
+  theforeman.foreman.content_view_version:
+    username: "{{ username }}"
+    password: "{{ password }}"
+    server_url: "https://{{ satellite_hostname }}"
+    content_view: "leapp_8to9"
+    organization: "{{ satellite_organization }}"
+
+
+- name: Create client activation key
+  theforeman.foreman.activation_key:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+    name: "{{ activation_key }}"
+    organization: "{{ satellite_organization }}"
+    lifecycle_environment: "Library"
+    content_view: "leapp_8to9"
+  when: status_info['status']['result'] == "ok"
+  register: ak_created
+
+- name: Create EPEL repo on client
+  ansible.builtin.yum_repository:
+    name: epel
+    description: EPEL YUM repo
+    baseurl: https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/
+    gpgcheck: no
+  delegate_to: "{{ groups['client'][0] }}"
+
+- name: Install openssl3
+  ansible.builtin.dnf:
+    name: openssl3
+    state: present
+  delegate_to: "{{ groups['client'][0] }}"
+
+
+
+
+- name: Generate registration command to register the system with Satellite server
+  theforeman.foreman.registration_command:
+    server_url: "https://{{ satellite_hostname }}"
+    username: "{{ username }}"
+    password: "{{ password }}"
+    validate_certs: false
+    setup_remote_execution: true
+    setup_insights: false
+    jwt_expiration: 8
+    force: true
+    insecure: true
+    activation_keys: "{{ activation_key }}"
+    organization: "{{ satellite_organization }}"
+    location: "{{ satellite_location }}"
+#    smart_proxy: "{{ groups['capsule'][0] }}"
+  when: ak_created is success
+  register: global_reg_command
+
+- name: Regsiter the client host
+  ansible.builtin.command: bash -c "{{ global_reg_command['registration_command'] }}"
+  delegate_to: "{{ groups['client'][0] }}"
+  register: host_registration
+  when: global_reg_command is defined
+
